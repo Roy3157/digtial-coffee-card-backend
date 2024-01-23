@@ -2,6 +2,16 @@ const express = require('express');
 const emailjs = require('@emailjs/nodejs');
 const mongoose = require('mongoose');
 const { Notification } = require("./models")
+const OTPAuth = require("otpauth")
+
+let totp = new OTPAuth.TOTP({
+    issuer: "ACME",
+    label: "AzureDiamond",
+    algorithm: "SHA1",
+    digits: 6,
+    period: 30,
+    secret: "NB2W45DFOIZA", // or 'OTPAuth.Secret.fromBase32("NB2W45DFOIZA")'
+});
 var app = express();
 app.use(express.json());
 
@@ -34,6 +44,21 @@ app.get('/api/getNotifications', async (req, res) => {
     const allNotifcations = await Notification.find();
     return res.status(200).json(allNotifcations);
 })
+
+app.get('/api/getTotp', async (req, res) => {
+    return res.send(totp.generate())
+})
+
+app.post('/api/totpVerify', async (req, res) => {
+    var token = req.body.token;
+    console.log(`Token: ${token}`)
+    let result = totp.validate({ token, window: 1 });
+    let resultString = JSON.stringify(result)
+    console.log(`validateResult: ${resultString}`)
+    return res.send(resultString)
+})
+
+
 
 //connect to database
 const startApp = async () => {
