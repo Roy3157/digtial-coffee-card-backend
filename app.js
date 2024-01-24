@@ -3,13 +3,14 @@ const emailjs = require('@emailjs/nodejs');
 const mongoose = require('mongoose');
 const { Notification } = require("./models")
 const OTPAuth = require("otpauth")
+const QRCode = require('qrcode');
 
 let totp = new OTPAuth.TOTP({
     issuer: "ACME",
     label: "AzureDiamond",
     algorithm: "SHA1",
     digits: 6,
-    period: 30,
+    period: 100,
     secret: "NB2W45DFOIZA", // or 'OTPAuth.Secret.fromBase32("NB2W45DFOIZA")'
 });
 var app = express();
@@ -71,6 +72,23 @@ app.get('/api/getNotifications', async (req, res) => {
 app.get('/api/getTotp', async (req, res) => {
     return res.send(totp.generate())
 })
+
+//generate qr code
+app.get('/api/generateQRCodeString/:customerId', async (req, res) => {
+    const {customerId} = req.params;
+    //build url
+    let url = `http://localhost:3000/api/makeCreditForCustomer?customerId=${customerId}&token=${totp.generate()}`
+    //use libary to generate qrcode encoding string
+    QRCode.toString(url, {
+        errorCorrectionLevel: 'H',
+        type: 'svg'
+      }, function(err, data) {
+        if (err) throw err;
+        res.send(data)
+      });
+})
+
+//verify code and increase count for customer
 
 app.post('/api/totpVerify', async (req, res) => {
     var token = req.body.token;
