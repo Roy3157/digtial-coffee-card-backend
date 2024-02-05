@@ -10,7 +10,7 @@ let totp = new OTPAuth.TOTP({
     label: "AzureDiamond",
     algorithm: "SHA1",
     digits: 6,
-    period: 100,
+    period: 30,
     secret: "NB2W45DFOIZA", // or 'OTPAuth.Secret.fromBase32("NB2W45DFOIZA")'
 });
 var app = express();
@@ -79,6 +79,7 @@ app.get('/api/generateQRCodeString/:customerId', async (req, res) => {
     //build url
     let url = `http://localhost:3000/api/makeCreditForCustomer?customerId=${customerId}&token=${totp.generate()}`
     //use libary to generate qrcode encoding string
+    console.log(url)
     QRCode.toString(url, {
         errorCorrectionLevel: 'H',
         type: 'svg'
@@ -88,15 +89,31 @@ app.get('/api/generateQRCodeString/:customerId', async (req, res) => {
       });
 })
 
-//verify code and increase count for customer
+
 
 app.post('/api/totpVerify', async (req, res) => {
-    var token = req.body.token;
-    console.log(`Token: ${token}`)
+    const { token } = req.body;
+    console.log(`Token: ${token}`);
+    const validationOutcome = totp.validate({ token, window: 1 });
+    const validationOutcomeStr = JSON.stringify(validationOutcome);
+    console.log(`validateResult: ${validationOutcomeStr}`);
+    res.send(validationOutcomeStr);
+});
+
+
+
+app.get('/api/makeCreditForCustomer', async (req, res) => {
+   
+    const {customerId,token} = req.query;
+    console.log(`Token: ${token},ID:${customerId}`)
     let result = totp.validate({ token, window: 1 });
-    let resultString = JSON.stringify(result)
-    console.log(`validateResult: ${resultString}`)
-    return res.send(resultString)
+  
+    if (result == 0){
+        return res.send("success")
+
+    }
+ 
+    return res.send("failed")
 })
 
 app.delete('/api/deleteNotificationsByName/:name', async (req, res) => {
