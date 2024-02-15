@@ -116,6 +116,23 @@ app.get('/api/generateQRCodeString/:customerId', async (req, res) => {
     });
 })
 
+app.post('/api/addItem', async (req, res) => {
+    // take payload and insert to database
+    // {
+    //     'name': "Latte",
+    //     'price': 4.5
+    // }
+});
+
+app.post('/api/loadItems', async (req, res) => {
+    // take multiple record as the same time and insert to database
+    // {
+    //     'name': "Latte",
+    //     'price': 4.5
+    // }
+});
+
+
 
 app.get('/api/makeCreditForCustomer', async (req, res) => {
 
